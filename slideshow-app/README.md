@@ -1,17 +1,16 @@
-# Markdown Slideshow Generator
+# Document Template Processor
 
-A Next.js application with ShadCN UI that allows users to input markdown text and automatically generate beautiful slideshow presentations with text and images.
+A Next.js application that allows users to upload DOCX or PPTX template files and fill them with JSON data using the docxtemplater library.
 
 ## Features
 
-- 📝 **Markdown Input**: Write your slides in simple markdown format
-- 🖼️ **Image Support**: Embed images using standard markdown image syntax
+- 📄 **File Upload**: Upload .docx or .pptx template files
+- 📊 **JSON Input**: Provide data in JSON format to replace placeholders
+- 🔄 **Template Processing**: Uses docxtemplater to fill templates with data
+- 📥 **Download Output**: Automatically downloads the generated document
 - 🎨 **Beautiful UI**: Modern, responsive design using ShadCN UI components
-- 🔄 **Multiple Slides**: Create full slideshows with multiple slides separated by `---`
-- 🎯 **Live Preview**: See your slides in real-time as you create them
-- 🧭 **Easy Navigation**: Navigate between slides with Previous/Next buttons
-- 📱 **Overview Panel**: Quick access to all slides with thumbnail overview
 - 🌓 **Dark Mode**: Automatic dark mode support
+- ✅ **Error Handling**: Clear error messages for invalid inputs
 
 ## Getting Started
 
@@ -48,61 +47,34 @@ npm start
 
 ## How to Use
 
-### Markdown Syntax
+1. **Create a Template**: Create a .docx or .pptx file with placeholders
+   - Simple placeholders: `{name}`, `{title}`, `{company}`
+   - Loops: `{#items}...{/items}`
+   - Conditions: Use angular expressions with a custom parser
 
-1. **Create a Slide Title**: Use a heading with `#`
-   ```markdown
-   # My Slide Title
+2. **Upload Template**: Click "Choose File" and select your template
+
+3. **Enter JSON Data**: Provide the data in JSON format
+   ```json
+   {
+     "name": "John Doe",
+     "title": "Software Engineer",
+     "company": "Tech Corp",
+     "items": [
+       { "description": "Item 1" },
+       { "description": "Item 2" }
+     ]
+   }
    ```
 
-2. **Add Content**: Write regular text after the title
-   ```markdown
-   # My Slide Title
-   This is the content of my slide.
-   It can have multiple lines.
-   ```
+4. **Generate Document**: Click "Generate Document" to process and download
 
-3. **Add Images**: Use standard markdown image syntax
-   ```markdown
-   ![Image Description](https://example.com/image.jpg)
-   ```
+### Example Template (Word/PowerPoint)
 
-4. **Separate Slides**: Use `---` on its own line
-   ```markdown
-   # Slide 1
-   Content for slide 1
-
-   ---
-
-   # Slide 2
-   Content for slide 2
-   ```
-
-### Example Input
-
-```markdown
-# Welcome to Our Presentation
-This is the first slide with an introduction to our topic.
-
-![Team Photo](https://example.com/team.jpg)
-
----
-
-# Key Features
-- Easy to use
-- Beautiful design
-- Supports images
-- Multiple slides
-
-![Features Diagram](https://example.com/features.jpg)
-
----
-
-# Thank You
-Questions? Feel free to reach out!
-
-![Contact](https://example.com/contact.jpg)
-```
+In your document, use placeholders like:
+- Hello {name}!
+- Your title is {title} at {company}
+- Loop example: {#items}{description}{/items}
 
 ## Technology Stack
 
@@ -110,7 +82,9 @@ Questions? Feel free to reach out!
 - **TypeScript**: Type-safe development
 - **Tailwind CSS v4**: Modern utility-first CSS
 - **ShadCN UI**: High-quality component library
-- **React**: UI library
+- **Docxtemplater**: Template engine for DOCX/PPTX files
+- **PizZip**: ZIP file handling for Office documents
+- **file-saver**: File download functionality
 
 ## Project Structure
 
@@ -121,40 +95,45 @@ slideshow-app/
 │   ├── layout.tsx           # Root layout
 │   └── page.tsx             # Main application page
 ├── components/
-│   ├── ui/                  # ShadCN UI components
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   └── textarea.tsx
-│   └── slide-preview.tsx    # Slide preview component
+│   └── ui/                  # ShadCN UI components
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── input.tsx
+│       └── textarea.tsx
 ├── lib/
-│   ├── markdown-parser.ts   # Markdown parsing logic
 │   └── utils.ts             # Utility functions
 └── public/                  # Static assets
 ```
 
 ## Features in Detail
 
-### Markdown Parser
+### File Upload
 
-The application includes a custom markdown parser (`lib/markdown-parser.ts`) that:
-- Splits content by slide separators (`---`)
-- Extracts titles from `#` headings
-- Finds and extracts image URLs from `![alt](url)` syntax
-- Cleans up and formats slide content
+- Accepts .docx and .pptx files
+- Validates file types
+- Shows file name and size after upload
 
-### Slide Preview
+### Template Processing
 
-Each slide displays:
-- Title (from markdown heading)
-- Content (regular text)
-- Image (if provided)
-- Fallback UI for missing or broken images
+Uses docxtemplater to:
+- Parse template placeholders
+- Replace placeholders with JSON data
+- Support loops and nested data structures
+- Maintain document formatting
 
-### Navigation
+### JSON Input
 
-- **Previous/Next Buttons**: Navigate sequentially through slides
-- **Slide Overview**: Click any slide thumbnail to jump directly to it
-- **Current Position**: Always visible counter showing "Slide X of Y"
+- Accepts any valid JSON structure
+- Supports nested objects and arrays
+- Real-time validation
+- Clear error messages for invalid JSON
+
+### Document Generation
+
+- Processes template with provided data
+- Generates output file
+- Automatically downloads result
+- Preserves original file format (.docx or .pptx)
 
 ## Customization
 
@@ -165,14 +144,6 @@ Modify `app/globals.css` to customize the theme colors and design system variabl
 ### Components
 
 All UI components are in `components/ui/` and can be customized to match your brand.
-
-### Parser Logic
-
-Extend `lib/markdown-parser.ts` to support additional markdown features like:
-- Bold/italic text
-- Lists
-- Code blocks
-- Links
 
 ## Deploy on Vercel
 

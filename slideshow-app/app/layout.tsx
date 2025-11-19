@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Markdown Slideshow Generator",
-  description: "Create beautiful slideshows from markdown text with embedded images",
+  title: "Document Template Processor",
+  description: "Upload DOCX or PPTX templates and fill them with JSON data using docxtemplater",
 };
 
 export default function RootLayout({

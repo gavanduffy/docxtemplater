@@ -4,153 +4,205 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { parseMarkdownToSlides } from "@/lib/markdown-parser";
-import { SlidePreview } from "@/components/slide-preview";
+import { Input } from "@/components/ui/input";
+import Docxtemplater from "docxtemplater";
+import PizZip from "pizzip";
+import { saveAs } from "file-saver";
 
 export default function Home() {
-  const [markdownInput, setMarkdownInput] = useState("");
-  const [slides, setSlides] = useState<Array<{ title: string; content: string; imageUrl: string }>>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [jsonInput, setJsonInput] = useState("");
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
-  const handleGenerate = () => {
-    const parsedSlides = parseMarkdownToSlides(markdownInput);
-    setSlides(parsedSlides);
-    setCurrentSlide(0);
-  };
-
-  const nextSlide = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const validTypes = [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ];
+      if (validTypes.includes(file.type) || file.name.endsWith('.docx') || file.name.endsWith('.pptx')) {
+        setUploadedFile(file);
+        setError("");
+        setStatus(`File "${file.name}" uploaded successfully`);
+      } else {
+        setError("Please upload a valid .docx or .pptx file");
+        setUploadedFile(null);
+      }
     }
   };
 
-  const prevSlide = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1);
+  const handleGenerate = async () => {
+    if (!uploadedFile) {
+      setError("Please upload a file first");
+      return;
+    }
+
+    if (!jsonInput.trim()) {
+      setError("Please provide JSON data");
+      return;
+    }
+
+    try {
+      setStatus("Processing...");
+      setError("");
+
+      // Parse JSON input
+      const data = JSON.parse(jsonInput);
+
+      // Read the uploaded file
+      const arrayBuffer = await uploadedFile.arrayBuffer();
+      const zip = new PizZip(arrayBuffer);
+
+      // Create docxtemplater instance
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+
+      // Set the template data
+      doc.render(data);
+
+      // Generate the output file
+      const output = doc.getZip().generate({
+        type: "blob",
+        mimeType: uploadedFile.type,
+      });
+
+      // Determine output filename
+      const fileExtension = uploadedFile.name.split('.').pop();
+      const baseName = uploadedFile.name.replace(/\.[^/.]+$/, "");
+      const outputFileName = `${baseName}_output.${fileExtension}`;
+
+      // Download the file
+      saveAs(output, outputFileName);
+      
+      setStatus(`File generated successfully: ${outputFileName}`);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(`Error: ${err.message}`);
+      } else {
+        setError("An error occurred while processing the file");
+      }
+      setStatus("");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
-            Markdown Slideshow Generator
+            Document Template Processor
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Create beautiful slideshows from markdown text with embedded images
+            Upload a DOCX or PPTX template and fill it with your JSON data
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Input Section */}
+        <div className="space-y-6">
+          {/* File Upload Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Markdown Input</CardTitle>
+              <CardTitle>Upload Template</CardTitle>
               <CardDescription>
-                Enter your markdown content. Use --- to separate slides.
-                Add images with ![alt](url) syntax.
+                Upload a .docx or .pptx file with template placeholders (e.g., {`{name}`}, {`{title}`})
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Textarea
-                placeholder={`# Slide 1 Title
-This is the content of slide 1
-
-![Image description](https://example.com/image1.jpg)
-
----
-
-# Slide 2 Title
-This is the content of slide 2
-
-![Another image](https://example.com/image2.jpg)`}
-                className="min-h-[400px] font-mono text-sm"
-                value={markdownInput}
-                onChange={(e) => setMarkdownInput(e.target.value)}
-              />
-              <Button onClick={handleGenerate} className="w-full">
-                Generate Slideshow
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Preview Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Slide Preview</CardTitle>
-              <CardDescription>
-                {slides.length > 0 
-                  ? `Slide ${currentSlide + 1} of ${slides.length}`
-                  : "Generate slides to see preview"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {slides.length > 0 ? (
-                <div className="space-y-4">
-                  <SlidePreview slide={slides[currentSlide]} />
-                  <div className="flex justify-between items-center">
-                    <Button
-                      onClick={prevSlide}
-                      disabled={currentSlide === 0}
-                      variant="outline"
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {currentSlide + 1} / {slides.length}
-                    </span>
-                    <Button
-                      onClick={nextSlide}
-                      disabled={currentSlide === slides.length - 1}
-                      variant="outline"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-[400px] text-slate-400 dark:text-slate-600">
-                  <p>No slides generated yet</p>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="file"
+                  accept=".docx,.pptx"
+                  onChange={handleFileUpload}
+                  className="cursor-pointer"
+                />
+              </div>
+              {uploadedFile && (
+                <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-md">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    ✓ {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* All Slides Overview */}
-        {slides.length > 0 && (
-          <Card className="mt-8">
+          {/* JSON Input Section */}
+          <Card>
             <CardHeader>
-              <CardTitle>All Slides Overview</CardTitle>
+              <CardTitle>JSON Data</CardTitle>
               <CardDescription>
-                Click on any slide to jump to it
+                Enter the JSON data to replace placeholders in your template
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {slides.map((slide, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`p-4 border-2 rounded-lg text-left transition-all hover:shadow-md ${
-                      currentSlide === index
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="text-xs font-semibold text-slate-500 mb-1">
-                      Slide {index + 1}
-                    </div>
-                    <div className="text-sm font-medium text-slate-900 dark:text-white line-clamp-2">
-                      {slide.title || "Untitled"}
-                    </div>
-                  </button>
-                ))}
-              </div>
+            <CardContent className="space-y-4">
+              <Textarea
+                placeholder={`{
+  "name": "John Doe",
+  "title": "Software Engineer",
+  "company": "Tech Corp",
+  "items": [
+    { "description": "Item 1" },
+    { "description": "Item 2" }
+  ]
+}`}
+                className="min-h-[300px] font-mono text-sm"
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+              />
+              <Button 
+                onClick={handleGenerate} 
+                className="w-full"
+                disabled={!uploadedFile || !jsonInput.trim()}
+              >
+                Generate Document
+              </Button>
             </CardContent>
           </Card>
-        )}
+
+          {/* Status Messages */}
+          {status && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    {status}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {error && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    {error}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Instructions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>How to Use</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <ol className="list-decimal list-inside space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                <li>Create a template document (.docx or .pptx) with placeholders like {`{name}`}, {`{title}`}, etc.</li>
+                <li>For loops, use {`{#items}`}...{`{/items}`} syntax</li>
+                <li>Upload your template file using the file input above</li>
+                <li>Enter your JSON data in the textarea</li>
+                <li>Click &quot;Generate Document&quot; to process and download the result</li>
+              </ol>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
-# Slideshow Application
+# Document Template Processor Web Application
 
-This repository now includes a Next.js web application for creating slideshows from markdown text.
+This repository now includes a Next.js web application for processing DOCX and PPTX templates with JSON data using docxtemplater.
 
 ## Location
 
-The slideshow application is located in the `slideshow-app/` directory.
+The application is located in the `slideshow-app/` directory.
 
 ## Quick Start
 
@@ -19,19 +19,21 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 ## What is it?
 
 A modern web application that allows users to:
-- Input markdown text with titles, content, and images
-- Generate beautiful slideshow presentations
-- Navigate through multiple slides
-- View all slides in an overview panel
+- Upload DOCX or PPTX template files with placeholders
+- Provide JSON data to fill the templates
+- Generate and download processed documents
+- Process both Word and PowerPoint templates
 
 ## Features
 
-- 📝 Markdown input with live preview
-- 🖼️ Image support via URLs
+- 📄 File upload for .docx and .pptx files
+- 📊 JSON input for template data
+- 🔄 Template processing using docxtemplater
+- 📥 Automatic file download
 - 🎨 Modern UI with ShadCN components
 - 📱 Responsive design
 - 🌓 Dark mode support
-- 🧭 Easy navigation between slides
+- ✅ Error handling and validation
 
 ## Documentation
 
@@ -44,7 +46,14 @@ See [slideshow-app/README.md](slideshow-app/README.md) for detailed documentatio
 - Tailwind CSS v4
 - React
 - ShadCN UI
+- Docxtemplater
+- PizZip
+- file-saver
 
 ## Integration with docxtemplater
 
-While this application is built as a standalone Next.js app, it demonstrates how markdown content can be structured and parsed for template filling. Future enhancements could integrate with the docxtemplater library to generate actual PowerPoint or Word documents from the slideshow content.
+This application provides a user-friendly web interface for the docxtemplater library, making it easy to:
+- Test templates without writing code
+- Generate documents on-the-fly
+- Demonstrate docxtemplater capabilities
+- Quickly prototype template-based document generation
