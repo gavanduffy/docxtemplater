@@ -39,3 +39,8 @@ reports
 /text.js
 /expressions.js
 *.pdf
+
+# Next.js
+slideshow-app/.next/
+slideshow-app/out/
+slideshow-app/.turbo/
