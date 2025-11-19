@@ -1,5 +1,4 @@
 import { Slide } from "@/lib/markdown-parser";
-import Image from "next/image";
 
 interface SlidePreviewProps {
   slide: Slide;
@@ -26,6 +25,7 @@ export function SlidePreview({ slide }: SlidePreviewProps) {
       {slide.imageUrl && (
         <div className="relative w-full h-64 mt-auto">
           <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={slide.imageUrl}
               alt={slide.title || "Slide image"}
